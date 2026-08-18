@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: fitterfield
+    staticSite: true
+    buildCommand: ""
+    startCommand: ""
+    publishPath: .
