@@ -83,7 +83,6 @@
     <div><div class="eyebrow">MADE FOR THE TRADE</div><h2>Useful for every stage of the fitter's path.</h2></div>
     <div class="audience-grid">
       <div><b>Apprentices</b><p>Reinforce what you're learning and practice away from the jobsite.</p></div>
-      <div><b>Helpers</b><p>Build terminology, tool and component familiarity faster.</p></div>
       <div><b>Journeymen</b><p>Keep useful field tools and references close at hand.</p></div>
       <div><b>Foremen</b><p>Keep job notes and field information more organized.</p></div>
     </div>
@@ -109,9 +108,8 @@
       <div class="price-label">ONE-TIME ACCESS</div>
       <div class="amount">$29<span>.99</span></div>
       <p>No monthly Pro subscription.</p>
-      <!-- Replace # with your Stripe Payment Link or Payhip/Gumroad checkout URL -->
-      <a class="btn primary wide" href="#" onclick="showCheckoutNotice(event)">Get FitterField Pro</a>
-      <small>Secure checkout will open here after you add your payment link.</small>
+      <a class="btn primary wide" href="https://buy.stripe.com/fZu7sL8Le78xapo2ie8Vi01">Get FitterField Pro</a>
+      <small>Secure checkout powered by Stripe.</small>
     </div>
   </div>
 </section>
@@ -130,7 +128,7 @@
 <section id="faq" class="section">
   <div class="wrap narrow">
     <div class="section-head"><div class="eyebrow">FAQ</div><h2>Questions fitters ask.</h2></div>
-    <details><summary>Is FitterField only for apprentices?</summary><p>No. It is designed for apprentices, helpers, journeymen and foremen. Different features are useful at different experience levels.</p></details>
+    <details><summary>Is FitterField only for apprentices?</summary><p>No. It is designed for apprentices, journeymen and foremen. Different features are useful at different experience levels.</p></details>
     <details><summary>Is FitterField an official NFPA or NCCER product?</summary><p>No. FitterField is an independent educational and productivity product and is not affiliated with or endorsed by NFPA, NCCER or any manufacturer.</p></details>
     <details><summary>Does Pro require a monthly subscription?</summary><p>No. The Pro offer shown on this page is a one-time purchase. Any future membership or premium service would be clearly identified as a separate offer.</p></details>
     <details><summary>Can I use it on an iPhone?</summary><p>Yes. FitterField is being designed mobile-first for use on phones and other modern devices.</p></details>
@@ -148,10 +146,6 @@
 
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
-function showCheckoutNotice(e){
-  e.preventDefault();
-  alert("Checkout is not connected yet. Replace this button's href with your Stripe Payment Link, Payhip checkout URL, or your FitterField app checkout URL before launch.");
-}
 </script>
 </body>
 </html>
