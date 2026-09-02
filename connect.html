@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FitterField — Stripe Connect</title>
+  <style>
+    :root{--navy:#071525;--panel:#10253b;--panel2:#15324d;--text:#f7fbff;--muted:#a9bbcf;--cyan:#27d3ee;--orange:#ff8a25;--line:#284762;--good:#42e39b;--bad:#ff6b6b}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#061321,#0b1f34 55%,#102b42);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:inherit}.wrap{max-width:1080px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}.brand{font-weight:900;letter-spacing:.4px}.brand span{color:var(--cyan)}.pill{padding:8px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}.hero{padding:28px;border:1px solid var(--line);border-radius:22px;background:rgba(16,37,59,.86);box-shadow:0 20px 60px rgba(0,0,0,.25)}h1{font-size:clamp(30px,6vw,52px);margin:0 0 10px}h2{margin-top:0}.hero p,.muted{color:var(--muted);line-height:1.6}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}.card{padding:22px;border:1px solid var(--line);border-radius:18px;background:rgba(16,37,59,.82)}label{display:block;font-size:12px;color:var(--muted);margin:12px 0 6px}input,textarea,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#081a2c;color:var(--text);font:inherit}textarea{min-height:80px;resize:vertical}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button,.button{border:0;border-radius:10px;padding:12px 15px;font-weight:800;cursor:pointer;text-decoration:none;background:var(--orange);color:#111}button.secondary,.button.secondary{background:#1a3a56;color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:not-allowed}.status{margin-top:14px;padding:14px;border-radius:12px;background:#091a2a;border:1px solid var(--line);white-space:pre-wrap}.ok{color:var(--good)}.bad{color:var(--bad)}.products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.product{padding:16px;border:1px solid var(--line);border-radius:14px;background:#0b2034}.price{font-size:24px;font-weight:900;color:var(--cyan)}.small{font-size:12px;color:var(--muted)}.hidden{display:none}.notice{padding:12px;border-left:4px solid var(--cyan);background:#092035;color:var(--muted);line-height:1.5}.danger{border-left-color:var(--bad)}@media(max-width:760px){.grid,.products{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.wrap{padding:14px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><div class="brand">FITTER<span>FIELD</span>™</div><div class="pill">Stripe Connect V2 demo</div></header>
+
+  <section class="hero">
+    <h1>Connect payments to FitterField.</h1>
+    <p>Onboard a merchant, check their live Stripe status, create products, and give their customers a simple hosted Checkout storefront.</p>
+    <div class="notice">Demo note: this page uses a Stripe account ID in the URL. In production, use your own merchant/user ID and resolve it to the Stripe account server-side.</div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>1. Merchant onboarding</h2>
+      <p class="muted">Create a V2 connected account, then send the merchant through Stripe Account Link onboarding.</p>
+      <label for="displayName">Business / display name</label>
+      <input id="displayName" placeholder="Example Fire Protection LLC">
+      <label for="email">Merchant email</label>
+      <input id="email" type="email" placeholder="owner@example.com">
+      <div class="row"><button id="createAccount">Create connected account</button></div>
+      <label for="accountId">Connected account ID</label>
+      <input id="accountId" placeholder="acct_...">
+      <div class="row">
+        <button id="onboard">Onboard to collect payments</button>
+        <button id="refreshStatus" class="secondary">Refresh live status</button>
+      </div>
+      <div id="status" class="status">No account loaded.</div>
+    </section>
+
+    <section class="card">
+      <h2>2. Merchant subscription</h2>
+      <p class="muted">Charge the connected account a recurring FitterField service fee using the V2 customer_account model.</p>
+      <div class="row">
+        <button id="subscribe">Subscribe connected account</button>
+        <button id="portal" class="secondary">Open billing portal</button>
+      </div>
+      <div class="status small">The demo subscription Price is configured server-side. Replace CONNECT_SUBSCRIPTION_PRICE_ID in Render if you want a different plan.</div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>3. Create products for this merchant</h2>
+    <div class="grid">
+      <div>
+        <label for="productName">Product name</label><input id="productName" placeholder="FitterField Field Guide">
+        <label for="productDescription">Description</label><textarea id="productDescription" placeholder="A digital field resource for fire sprinkler professionals."></textarea>
+      </div>
+      <div>
+        <label for="priceCents">Price in cents</label><input id="priceCents" type="number" min="50" value="2999">
+        <label for="currency">Currency</label><input id="currency" value="usd" maxlength="3">
+        <div class="row"><button id="createProduct">Create product on connected account</button><button id="loadProducts" class="secondary">Refresh storefront</button></div>
+      </div>
+    </div>
+    <div id="productMessage" class="status">Create or load a connected account first.</div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>4. Customer storefront</h2>
+    <p class="muted">Customers buy products from the connected merchant using Stripe-hosted Checkout. Direct charges include a sample FitterField application fee.</p>
+    <div id="products" class="products"></div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Webhook setup</h2>
+    <p class="muted">Normal Billing events go to <code>/webhooks/stripe</code>. V2 thin account events go to <code>/webhooks/stripe-v2</code>. The server retrieves the full V2 event and then the current Account state after requirements/capability changes.</p>
+    <div class="notice"><b>Local Stripe CLI:</b><br><code>stripe listen --thin-events 'v2.core.account[requirements].updated,v2.core.account[configuration.merchant].capability_status_updated,v2.core.account[configuration.customer].capability_status_updated,v2.core.account[configuration.recipient].capability_status_updated' --forward-thin-to http://localhost:10000/webhooks/stripe-v2</code></div>
+  </section>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const initialAccount = params.get('accountId');
+  if (initialAccount) $('accountId').value = initialAccount;
+
+  function currentAccount(){
+    const id = $('accountId').value.trim();
+    if(!/^acct_[A-Za-z0-9]+$/.test(id)) throw new Error('Enter a valid connected account ID first.');
+    return id;
+  }
+  function showStatus(message, good=false){ $('status').innerHTML = good ? `<span class="ok">${escapeHtml(message)}</span>` : escapeHtml(message); }
+  function escapeHtml(value){ return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+  async function api(url, options={}){
+    const response = await fetch(url, {headers:{'Content-Type':'application/json',...(options.headers||{})},...options});
+    const data = await response.json().catch(()=>({error:'Server returned a non-JSON response.'}));
+    if(!response.ok) throw new Error(data.error || data.fix || 'Request failed.');
+    return data;
+  }
+
+  $('createAccount').onclick = async () => {
+    try{
+      const data = await api('/api/connect/accounts',{method:'POST',body:JSON.stringify({displayName:$('displayName').value,email:$('email').value})});
+      $('accountId').value = data.accountId;
+      showStatus(`Created ${data.accountId}. Click “Onboard to collect payments”.`, true);
+      await refreshStatus(); await loadProducts();
+    }catch(e){showStatus(e.message)}
+  };
+
+  $('onboard').onclick = async () => {
+    try{ const data=await api(`/api/connect/accounts/${encodeURIComponent(currentAccount())}/onboarding`,{method:'POST'}); location.href=data.url; }
+    catch(e){showStatus(e.message)}
+  };
+
+  async function refreshStatus(){
+    try{
+      const data=await api(`/api/connect/accounts/${encodeURIComponent(currentAccount())}/status`);
+      showStatus(`Payments: ${data.readyToProcessPayments ? 'READY' : 'NOT READY'}\nCapability: ${data.capabilityStatus}\nRequirements: ${data.requirementsStatus}\nOnboarding complete: ${data.onboardingComplete ? 'YES' : 'NO'}`, data.readyToProcessPayments);
+    }catch(e){showStatus(e.message)}
+  }
+  $('refreshStatus').onclick=refreshStatus;
+
+  $('subscribe').onclick = async()=>{
+    try{const data=await api(`/api/connect/${encodeURIComponent(currentAccount())}/subscription`,{method:'POST'});location.href=data.url;}
+    catch(e){showStatus(e.message)}
+  };
+  $('portal').onclick = async()=>{
+    try{const data=await api(`/api/connect/${encodeURIComponent(currentAccount())}/portal`,{method:'POST'});location.href=data.url;}
+    catch(e){showStatus(e.message)}
+  };
+
+  $('createProduct').onclick = async()=>{
+    try{
+      const data=await api(`/api/connect/${encodeURIComponent(currentAccount())}/products`,{method:'POST',body:JSON.stringify({name:$('productName').value,description:$('productDescription').value,priceInCents:Number($('priceCents').value),currency:$('currency').value})});
+      $('productMessage').textContent=`Created ${data.product.name} (${data.product.id}).`;
+      await loadProducts();
+    }catch(e){$('productMessage').textContent=e.message}
+  };
+
+  async function loadProducts(){
+    try{
+      const data=await api(`/api/store/${encodeURIComponent(currentAccount())}/products`);
+      $('products').innerHTML=data.products.length?data.products.map(p=>{
+        const price=p.default_price;
+        const amount=price?.unit_amount!=null ? new Intl.NumberFormat('en-US',{style:'currency',currency:(price.currency||'usd').toUpperCase()}).format(price.unit_amount/100) : 'Price unavailable';
+        return `<article class="product"><div class="small">${escapeHtml(p.id)}</div><h3>${escapeHtml(p.name)}</h3><p class="muted">${escapeHtml(p.description||'')}</p><div class="price">${amount}</div><button style="margin-top:12px" onclick="buy('${escapeHtml(p.id)}')">Buy now</button></article>`;
+      }).join(''):'<div class="status">No active products yet.</div>';
+    }catch(e){$('products').innerHTML=`<div class="status danger">${escapeHtml(e.message)}</div>`}
+  }
+  window.buy=async productId=>{
+    try{const data=await api(`/api/store/${encodeURIComponent(currentAccount())}/checkout`,{method:'POST',body:JSON.stringify({productId})});location.href=data.url;}
+    catch(e){alert(e.message)}
+  };
+
+  if(initialAccount){refreshStatus();loadProducts();}
+</script>
+</body>
+</html>
