@@ -168,7 +168,6 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (r
   }
 
   try {
-    // These are normal (non-thin) Billing webhooks.
     switch (event.type) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object;
@@ -211,14 +210,6 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (r
   }
 });
 
-/*
- * STEP 4 — V2 thin-event webhook.
- *
- * Thin events are intentionally tiny and unversioned. We verify the signature,
- * parse the thin event, retrieve the full V2 event, then retrieve the current
- * Account state using the related_object.id. This keeps requirements/capability
- * data current instead of trusting a stale webhook snapshot.
- */
 app.post('/webhooks/stripe-v2', express.raw({ type: 'application/json' }), async (req, res) => {
   if (!stripeClient) return res.status(503).send('Stripe is not configured. Add STRIPE_SECRET_KEY in Render.');
   if (!STRIPE_V2_WEBHOOK_SECRET) return res.status(503).send('STRIPE_V2_WEBHOOK_SECRET is missing. Add the thin-event destination signing secret in Render.');
@@ -234,17 +225,10 @@ app.post('/webhooks/stripe-v2', express.raw({ type: 'application/json' }), async
       return res.json({ received: true });
     }
 
-    // These handlers intentionally cover each event requested for this demo.
     switch (event.type) {
       case 'v2.core.account[requirements].updated':
-        await collectUpdatedRequirements(accountId, event);
-        break;
       case 'v2.core.account[configuration.merchant].capability_status_updated':
-        await collectUpdatedRequirements(accountId, event);
-        break;
       case 'v2.core.account[configuration.customer].capability_status_updated':
-        await collectUpdatedRequirements(accountId, event);
-        break;
       case 'v2.core.account[configuration.recipient].capability_status_updated':
         await collectUpdatedRequirements(accountId, event);
         break;
@@ -260,7 +244,6 @@ app.post('/webhooks/stripe-v2', express.raw({ type: 'application/json' }), async
 });
 
 async function collectUpdatedRequirements(accountId, event) {
-  // Fetch current state directly from Stripe. We do NOT store onboarding status.
   const account = await stripeClient.v2.core.accounts.retrieve(accountId, {
     include: ['configuration.merchant', 'requirements']
   });
@@ -269,12 +252,10 @@ async function collectUpdatedRequirements(accountId, event) {
   return status;
 }
 
-// JSON parsing is intentionally after the webhook routes.
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(__dirname));
 
-/* ----------------------------- Demo UI routes ----------------------------- */
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'app.html')));
 app.get('/app', (_req, res) => res.sendFile(path.join(__dirname, 'app.html')));
 app.get('/connect', (_req, res) => res.sendFile(path.join(__dirname, 'connect.html')));
@@ -285,18 +266,13 @@ app.get('/health', (_req, res) => {
     ok: true,
     stripeConfigured: Boolean(STRIPE_SECRET_KEY),
     databaseConfigured: Boolean(pool),
-    stripeSdk: '22.4.0+',
+    stripeSdk: '22.6.1',
     connect: 'v2',
     billing: 'monthly',
     app: 'fitterfield-connect-demo'
   });
 });
 
-/* -------------------------- Connected Accounts ---------------------------- */
-
-// STEP 5 — Create a V2 connected account.
-// IMPORTANT: no top-level `type` field is used. The requested V2 properties are
-// intentionally the only account-creation properties in this sample.
 app.post('/api/connect/accounts', async (req, res) => {
   if (!requireStripe(res) || !requireBaseUrl(res)) return;
 
@@ -308,9 +284,7 @@ app.post('/api/connect/accounts', async (req, res) => {
     const account = await stripeClient.v2.core.accounts.create({
       display_name: displayName,
       contact_email: email,
-      identity: {
-        country: 'us'
-      },
+      identity: { country: 'us' },
       dashboard: 'full',
       defaults: {
         responsibilities: {
@@ -322,15 +296,12 @@ app.post('/api/connect/accounts', async (req, res) => {
         customer: {},
         merchant: {
           capabilities: {
-            card_payments: {
-              requested: true
-            }
+            card_payments: { requested: true }
           }
         }
       }
     });
 
-    // Map the application user to the Stripe account ID in Postgres.
     await saveUser({ email, displayName, accountId: account.id });
     res.json({ accountId: account.id, message: 'Connected account created.' });
   } catch (err) {
@@ -339,7 +310,6 @@ app.post('/api/connect/accounts', async (req, res) => {
   }
 });
 
-// STEP 6 — Create an Account Link for onboarding.
 app.post('/api/connect/accounts/:accountId/onboarding', async (req, res) => {
   if (!requireStripe(res) || !requireBaseUrl(res)) return;
   const accountId = req.params.accountId;
@@ -364,7 +334,6 @@ app.post('/api/connect/accounts/:accountId/onboarding', async (req, res) => {
   }
 });
 
-// STEP 7 — Always retrieve onboarding/payment status directly from Stripe.
 app.get('/api/connect/accounts/:accountId/status', async (req, res) => {
   if (!requireStripe(res)) return;
   const accountId = req.params.accountId;
@@ -381,11 +350,6 @@ app.get('/api/connect/accounts/:accountId/status', async (req, res) => {
   }
 });
 
-/* ------------------------------ Products --------------------------------- */
-
-// STEP 8 — Create a product on the connected account.
-// stripeAccount sets the Stripe-Account header, so the product belongs to the
-// connected merchant rather than the FitterField platform account.
 app.post('/api/connect/:accountId/products', async (req, res) => {
   if (!requireStripe(res)) return;
   const accountId = req.params.accountId;
@@ -415,9 +379,6 @@ app.post('/api/connect/:accountId/products', async (req, res) => {
   }
 });
 
-// STEP 9 — Storefront product list. The connected account ID is in the URL for
-// this demo only. In production, use your own merchant slug/database ID and
-// resolve it to the Stripe account ID server-side.
 app.get('/api/store/:accountId/products', async (req, res) => {
   if (!requireStripe(res)) return;
   const accountId = req.params.accountId;
@@ -436,11 +397,6 @@ app.get('/api/store/:accountId/products', async (req, res) => {
   }
 });
 
-/* -------------------------- Direct Charge Checkout ------------------------ */
-
-// STEP 10 — Hosted Checkout direct charge.
-// The Stripe-Account header means the connected account is the merchant of
-// record for this direct charge. application_fee_amount monetizes FitterField.
 app.post('/api/store/:accountId/checkout', async (req, res) => {
   if (!requireStripe(res) || !requireBaseUrl(res)) return;
   const accountId = req.params.accountId;
@@ -449,7 +405,6 @@ app.post('/api/store/:accountId/checkout', async (req, res) => {
   if (!/^prod_[A-Za-z0-9]+$/.test(productId)) return res.status(400).json({ error: 'Invalid product ID.' });
 
   try {
-    // Read the product from the connected account, not the platform account.
     const product = await stripeClient.products.retrieve(productId, { expand: ['default_price'] }, { stripeAccount: accountId });
     const defaultPrice = product.default_price;
     const unitAmount = Number(defaultPrice?.unit_amount);
@@ -468,9 +423,7 @@ app.post('/api/store/:accountId/checkout', async (req, res) => {
         },
         quantity: 1
       }],
-      payment_intent_data: {
-        application_fee_amount: applicationFee
-      },
+      payment_intent_data: { application_fee_amount: applicationFee },
       mode: 'payment',
       success_url: `${APP_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_BASE_URL}/store/${encodeURIComponent(accountId)}`
@@ -483,12 +436,6 @@ app.post('/api/store/:accountId/checkout', async (req, res) => {
   }
 });
 
-/* -------------------------- Connected Account SaaS ------------------------ */
-
-// STEP 11 — Subscription Checkout for a connected account.
-// The platform-level recurring price was created in Stripe test mode for this
-// demo: price_1UB5dZEk0hZiSTYibNQshVrz. Set CONNECT_SUBSCRIPTION_PRICE_ID in
-// Render to use a different price. The V2 account ID doubles as customer_account.
 app.post('/api/connect/:accountId/subscription', async (req, res) => {
   if (!requireStripe(res) || !requireBaseUrl(res)) return;
   const accountId = req.params.accountId;
@@ -512,7 +459,6 @@ app.post('/api/connect/:accountId/subscription', async (req, res) => {
   }
 });
 
-// STEP 12 — Billing Portal lets the connected account manage its subscription.
 app.post('/api/connect/:accountId/portal', async (req, res) => {
   if (!requireStripe(res) || !requireBaseUrl(res)) return;
   const accountId = req.params.accountId;
@@ -529,8 +475,6 @@ app.post('/api/connect/:accountId/portal', async (req, res) => {
     res.status(500).json({ error: err.message || 'Unable to open Billing Portal.' });
   }
 });
-
-/* ----------------------------- Legacy Pro flow ---------------------------- */
 
 async function getVerifiedSubscription(sessionId) {
   if (!stripeClient) throw new Error('Stripe is not configured. Add STRIPE_SECRET_KEY.');
