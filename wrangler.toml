@@ -1,0 +1,11 @@
+name = "fitterfield-pro"
+main = "cloudflare/worker.js"
+compatibility_date = "2026-09-05"
+
+[assets]
+directory = "."
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[vars]
+FITTERFIELD_ENV = "production"
