@@ -6,6 +6,7 @@ compatibility_date = "2026-09-05"
 directory = "."
 binding = "ASSETS"
 not_found_handling = "single-page-application"
+exclude = ["node_modules/**", ".git/**", "ai-service/**", "cloudflare/**", "*.zip", "*.md", ".env*", "package.json", "render.yaml", "server.js", "wrangler.toml"]
 
 [vars]
 FITTERFIELD_ENV = "production"
