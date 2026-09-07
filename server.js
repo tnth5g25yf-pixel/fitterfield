@@ -8,7 +8,13 @@ const EXPECTED_PRICE_ID = 'price_1UAbIhEk0hZiSTYiYiamGCoH';
 const PRODUCT_URL = 'https://raw.githubusercontent.com/tnth5g25yf-pixel/fitterfield/main/FitterField-Website-Render-Ready.zip';
 
 app.disable('x-powered-by');
+app.get('/', (_req, res) => {
+  res.sendFile(__dirname + '/app.html');
+});
 
+app.get('/app', (_req, res) => {
+  res.sendFile(__dirname + '/app.html');
+});
 app.get('/health', (_req, res) => {
   res.json({ ok: true, stripeConfigured: Boolean(STRIPE_SECRET_KEY), billing: 'monthly', priceId: EXPECTED_PRICE_ID });
 });
